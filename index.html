@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CATI Revenue & Operations Dashboard</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<style>
+:root{--bg:#f4efe7;--card:#ffffff;--ink:#1f2937;--muted:#6b7280;--line:#e3d9cb;--accent:#7c3aed;--accent2:#0f766e;--accent3:#2563eb;--shadow:0 14px 32px rgba(15,23,42,.10)}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:1520px;margin:0 auto;padding:20px;position:relative;z-index:1}
+.header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;background:linear-gradient(135deg,#ffffff 0%, #fbf7ef 55%, #f3ede2 100%);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+.h-title{font-size:30px;font-weight:800;margin:0 0 6px;letter-spacing:-0.02em}
+.h-sub{color:var(--muted);margin:0;font-size:14px}
+.h-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.badge,.btn,.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;font-size:13px}
+.btn{background:linear-gradient(135deg,var(--accent),#5b21b6);color:#fff;border:none;cursor:pointer;box-shadow:0 8px 18px rgba(124,58,237,.25)}
+.filters{position:sticky;top:0;z-index:10;margin-top:14px;background:rgba(250,246,239,.90);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:16px;padding:12px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;box-shadow:var(--shadow)}
+.filter{display:flex;flex-direction:column;gap:6px}.filter label{font-size:12px;color:var(--muted)}
+.filter select,.filter input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{cursor:pointer}.chip.active{background:linear-gradient(135deg,var(--accent2),#0b5e57);color:#fff;border-color:var(--accent2)}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-top:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+.kpi .t{font-size:12px;color:var(--muted);margin-bottom:8px}.kpi .v{font-size:24px;font-weight:800;color:#111827}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow);min-height:360px;position:relative;overflow:hidden}
+.panel h2{margin:0 0 8px;font-size:18px;letter-spacing:-0.01em}.panel p{margin:0 0 12px;color:var(--muted);font-size:13px}
+.chart{border:1px solid #eee;border-radius:14px;min-height:300px;background:linear-gradient(180deg,#ffffff,#fbf8f3)}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;background:#fff;min-width:1200px}th,td{padding:12px 10px;border-bottom:1px solid #eee;text-align:left;font-size:13px;white-space:nowrap}th{position:sticky;top:0;background:#faf7f2;color:#374151;font-weight:700}
+.footer{margin:14px 0 8px;color:var(--muted);font-size:12px;text-align:center}
+@media (max-width:1200px){.filters{grid-template-columns:repeat(3,minmax(0,1fr))}.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.grid2{grid-template-columns:1fr}}
+@media (max-width:720px){.filters,.kpis{grid-template-columns:1fr}.header{flex-direction:column}.h-meta{justify-content:flex-start}}
+</style>
+</head>
+<body><div style="position:fixed;inset:0;background:radial-gradient(circle at top left, rgba(124,58,237,.08), transparent 30%), radial-gradient(circle at top right, rgba(15,118,110,.08), transparent 28%);pointer-events:none"></div>
+<div class="wrap">
+  <header class="header">
+    <div>
+      <h1 class="h-title">CATI Revenue & Operations Dashboard</h1>
+      <p class="h-sub">Disposition, billed, client, Research Associate, QA, and project breakdowns</p>
+    </div>
+    <div class="h-meta">
+      <span class="badge" id="refreshBadge">Last refresh: --</span>
+      <button class="btn" id="refreshBtn">Refresh</button>
+    </div>
+  </header>
+
+  <section class="filters">
+    <div class="filter"><label>Date range</label><input type="date" id="dateFrom"><input type="date" id="dateTo" style="margin-top:6px"></div>
+    <div class="filter"><label>Disposition Month</label><select id="dispMonth"><option value="All">All</option></select></div>
+    <div class="filter"><label>Billed Month</label><select id="billedMonth"><option value="All">All</option></select></div>
+    <div class="filter"><label>Client Status</label><div class="chips"><button class="chip active" data-status="Approved">Approved</button><button class="chip" data-status="Test IDs">Test IDs</button><button class="chip" data-status="Removal">Removal</button><button class="chip" data-status="All">All</button></div></div>
+    <div class="filter"><label>Client</label><select id="client"><option value="All">All</option></select></div>
+    <div class="filter"><label>Research Associate</label><select id="ra"><option value="All">All</option></select></div>
+    <div class="filter"><label>QA</label><select id="qa"><option value="All">All</option></select></div>
+  </section>
+
+  <section class="kpis">
+    <div class="kpi"><div class="t">Total Revenue</div><div class="v" id="kpiRevenue">--</div></div>
+    <div class="kpi"><div class="t">Approved Revenue</div><div class="v" id="kpiApproved">--</div></div>
+    <div class="kpi"><div class="t">Test IDs Revenue</div><div class="v" id="kpiTest">--</div></div>
+    <div class="kpi"><div class="t">Removal Revenue</div><div class="v" id="kpiRemoval">--</div></div>
+    <div class="kpi"><div class="t">Total Records</div><div class="v" id="kpiRows">--</div></div>
+    <div class="kpi"><div class="t">Active Clients</div><div class="v" id="kpiClients">--</div></div>
+  </section>
+
+  <section class="grid2">
+    <div class="panel"><h2>Disposition Date wise</h2><p>Revenue by date with status split</p><div class="chart" id="chartDate"></div></div>
+    <div class="panel"><h2>Disposition Month wise</h2><p>Revenue by disposition month</p><div class="chart" id="chartDispMonth"></div></div>
+  </section>
+
+  <section class="grid2">
+    <div class="panel"><h2>Billed Month wise</h2><p>Revenue by billed month</p><div class="chart" id="chartBilledMonth"></div></div>
+    <div class="panel"><h2>Research Associate wise</h2><p>Revenue by research associate</p><div class="chart" id="chartRA"></div></div>
+  </section>
+
+  <section class="grid2">
+    <div class="panel"><h2>QA wise</h2><p>Revenue by QA</p><div class="chart" id="chartQA"></div></div>
+    <div class="panel"><h2>Client wise</h2><p>Revenue by client</p><div class="chart" id="chartClient"></div></div>
+  </section>
+
+  <section class="panel" style="margin-top:14px;">
+    <h2>Drill-down table</h2>
+    <p>Filtered records with revenue, status, and ownership details</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Disposition Date</th><th>Disposition Month</th><th>Billed Month</th><th>Client</th><th>Research Associate</th><th>QA</th><th>Client Status</th><th>Revenue</th><th>Project Name</th></tr></thead>
+        <tbody id="tableBody"><tr><td colspan="9">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="footer">HTML dashboard ready for Vercel deployment.</div>
+</div>
+<script>
+let raw=[]; let state={status:'Approved'};
+const fmt=n=>new Intl.NumberFormat('en-IN',{maximumFractionDigits:0}).format(n||0);
+const uniq=a=>[...new Set(a.filter(v=>v!==null && v!==undefined && v!==''))].sort((x,y)=>String(x).localeCompare(String(y)));
+const sum=(arr,k)=>arr.reduce((s,d)=>s+(+d[k]||0),0);
+function group(arr,key){const m=new Map(); arr.forEach(d=>{const k=d[key]||'Unknown'; m.set(k,(m.get(k)||0)+(+d.Revenue||0));}); return [...m.entries()].sort((a,b)=>b[1]-a[1]);}
+function groupDate(arr,key){const m=new Map(); arr.forEach(d=>{const k=d[key]||'Unknown'; m.set(k,(m.get(k)||0)+(+d.Revenue||0));}); return [...m.entries()].sort((a,b)=>new Date(a[0]) - new Date(b[0]));}
+function renderPlot(id,x,y,title,type='bar'){Plotly.newPlot(id,[{x,y,type,marker:{color:'#7c3aed'}}],{margin:{l:50,r:20,t:10,b:50},paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'#fff',xaxis:{title:''},yaxis:{title:'Revenue'},height:300,showlegend:false}, {displayModeBar:false, responsive:true});}
+function renderHorizontal(id,data,title){Plotly.newPlot(id,[{x:data.map(d=>d[1]), y:data.map(d=>d[0]), type:'bar', orientation:'h', marker:{color:'#0f766e'}}],{margin:{l:160,r:20,t:10,b:40},paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'#fff',height:300,showlegend:false}, {displayModeBar:false, responsive:true});}
+function applyFilters(){let d=raw.slice(); if(state.status!=='All') d=d.filter(r=>r['Client Status Bucket']===state.status); if(dateFrom.value) d=d.filter(r=>r['Disposition Date']>=dateFrom.value); if(dateTo.value) d=d.filter(r=>r['Disposition Date']<=dateTo.value); if(dispMonth.value!=='All') d=d.filter(r=>r['Disposition Month']===dispMonth.value); if(billedMonth.value!=='All') d=d.filter(r=>r['Billed Month']===billedMonth.value); if(client.value!=='All') d=d.filter(r=>r['Client']===client.value); if(ra.value!=='All') d=d.filter(r=>r['Research Associate']===ra.value); if(qa.value!=='All') d=d.filter(r=>r['QA']===qa.value); return d;}
+function update(){const d=applyFilters(); kpiRevenue.textContent='₹ '+fmt(sum(d,'Revenue')); kpiApproved.textContent='₹ '+fmt(sum(d.filter(x=>x['Client Status Bucket']==='Approved'),'Revenue')); kpiTest.textContent='₹ '+fmt(sum(d.filter(x=>x['Client Status Bucket']==='Test IDs'),'Revenue')); kpiRemoval.textContent='₹ '+fmt(sum(d.filter(x=>x['Client Status Bucket']==='Removal'),'Revenue')); kpiRows.textContent=fmt(d.length); kpiClients.textContent=fmt(uniq(d.map(x=>x.Client)).length);
+ const dd=groupDate(d,'Disposition Date'); renderPlot('chartDate', dd.map(x=>x[0]), dd.map(x=>x[1]), 'Disposition Date wise', 'scatter');
+ const dm=group(d,'Disposition Month'); renderPlot('chartDispMonth', dm.map(x=>x[0]), dm.map(x=>x[1]), 'Disposition Month wise');
+ const bm=group(d,'Billed Month'); renderPlot('chartBilledMonth', bm.map(x=>x[0]), bm.map(x=>x[1]), 'Billed Month wise');
+ renderHorizontal('chartRA', group(d,'Research Associate').slice(0,15), 'RA wise');
+ renderHorizontal('chartQA', group(d,'QA').slice(0,15), 'QA wise');
+ renderHorizontal('chartClient', group(d,'Client').slice(0,15), 'Client wise');
+ tableBody.innerHTML=d.slice(0,200).map(r=>`<tr><td>${r['Disposition Date']||''}</td><td>${r['Disposition Month']||''}</td><td>${r['Billed Month']||''}</td><td>${r['Client']||''}</td><td>${r['Research Associate']||''}</td><td>${r['QA']||''}</td><td>${r['Client Status']||''}</td><td>₹ ${fmt(r['Revenue'])}</td><td>${r['Project Name/ Email Subject']||''}</td></tr>`).join('') || '<tr><td colspan="9">No records</td></tr>'; refreshBadge.textContent='Last refresh: '+new Date().toLocaleString(); }
+function fillSelect(sel, vals){vals.forEach(v=>{const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o);});}
+fetch('cati_dashboard_data.json',{cache:'no-store'}).then(r=>r.json()).then(data=>{raw=data.map(d=>({...d, 'Client Status Bucket': d['Client Status Bucket'] || (String(d['Client Status']).includes('Approved') ? 'Approved' : String(d['Client Status']).includes('Test') ? 'Test IDs' : String(d['Client Status']).includes('Removal') ? 'Removal' : 'Other')}));
+ fillSelect(dispMonth, uniq(raw.map(r=>r['Disposition Month']))); fillSelect(billedMonth, uniq(raw.map(r=>r['Billed Month']))); fillSelect(client, uniq(raw.map(r=>r['Client']))); fillSelect(ra, uniq(raw.map(r=>r['Research Associate']))); fillSelect(qa, uniq(raw.map(r=>r['QA'])));
+ update();}).catch(()=>{document.querySelectorAll('.chart').forEach(el=>el.innerHTML='<div style="padding:20px;color:#6b7280">Place <b>cati_dashboard_data.json</b> next to this file to load charts.</div>'); tableBody.innerHTML='<tr><td colspan="9">Data file not found</td></tr>';});
+[dateFrom, dateTo, dispMonth, billedMonth, client, ra, qa].forEach(el=>el.addEventListener('change', update)); document.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>{document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); ch.classList.add('active'); state.status=ch.dataset.status; update();})); refreshBtn.addEventListener('click', ()=>location.reload());
+</script>
+</body>
+</html>
