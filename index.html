@@ -5,69 +5,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CATI Revenue &amp; Operations Dashboard</title>
 
-  <!-- Tailwind CSS CDN for styling -->
+  <!-- Styling: Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js for data visualization -->
+  <!-- Chart Rendering: Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- SheetJS for client-side Excel parsing -->
+  <!-- Excel Reader: SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
-    .chart-container {
+    .chart-box {
       position: relative;
-      height: 300px;
+      height: 280px;
       width: 100%;
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans p-4 md:p-8">
+<body class="bg-gray-100 text-gray-800 p-4 md:p-8">
 
   <div class="max-w-7xl mx-auto space-y-6">
     <!-- Header -->
-    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-gray-300">
       <div>
-        <h1 class="text-2xl md:text-3xl font-bold text-slate-900">CATI Revenue &amp; Operations Dashboard</h1>
-        <p class="text-sm text-slate-500">Disposition, billed, client, Research Associate, QA, and project breakdowns</p>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">CATI Revenue &amp; Operations Dashboard</h1>
+        <p class="text-sm text-gray-500">Disposition, Billed, Client, Research Associate, QA, and Project Analytics</p>
       </div>
-      <div class="flex items-center gap-3">
-        <span id="last-refresh" class="text-xs text-slate-500 bg-slate-200 px-3 py-1.5 rounded-full font-medium">Last refresh: None</span>
+      <div>
+        <span id="last-refresh" class="text-xs text-gray-600 bg-gray-200 px-3 py-1.5 rounded-full font-medium">Status: No file loaded</span>
       </div>
     </header>
 
-    <!-- Upload Box (Drag and Drop) -->
-    <div id="drop-zone" class="border-2 border-dashed border-indigo-300 bg-white hover:bg-indigo-50/50 rounded-xl p-6 text-center cursor-pointer transition shadow-sm">
+    <!-- Upload Box -->
+    <div id="drop-zone" class="border-2 border-dashed border-indigo-400 bg-white hover:bg-indigo-50/50 rounded-xl p-6 text-center cursor-pointer transition shadow-sm">
       <input type="file" id="file-input" accept=".xlsx, .xls" class="hidden" />
       <div class="space-y-1">
-        <p class="text-sm md:text-base font-semibold text-indigo-700">
-          📁 Click to upload or drag &amp; drop <span class="underline">CATI Dashboard V2.xlsx</span>
+        <p class="text-base font-semibold text-indigo-700">
+          📁 Click or drag &amp; drop <span class="underline">CATI Dashboard V2.xlsx</span> here
         </p>
-        <p class="text-xs text-slate-400">Processed locally in your browser. No data leaves your machine.</p>
+        <p class="text-xs text-gray-400">All data is parsed directly in your browser.</p>
       </div>
     </div>
 
     <!-- Filters -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+    <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
       <div>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Billed Month</label>
-        <select id="filter-billed-month" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Billed Month</label>
+        <select id="filter-billed-month" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
           <option value="All">All Months</option>
         </select>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Client</label>
-        <select id="filter-client" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Client</label>
+        <select id="filter-client" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
           <option value="All">All Clients</option>
         </select>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">QA Auditor</label>
-        <select id="filter-qa" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">QA Auditor</label>
+        <select id="filter-qa" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
           <option value="All">All QA Members</option>
         </select>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Client Status</label>
-        <select id="filter-status" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Client Status</label>
+        <select id="filter-status" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
           <option value="All">All Statuses</option>
           <option value="Approved">Approved</option>
           <option value="Removal">Removal</option>
@@ -75,96 +75,96 @@
       </div>
     </section>
 
-    <!-- Scorecards (KPIs) -->
+    <!-- KPI Metric Cards -->
     <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-        <p class="text-xs text-slate-500 font-medium">Total Revenue</p>
-        <h3 id="card-total-revenue" class="text-xl font-bold text-slate-900 mt-1">$0</h3>
+      <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <p class="text-xs text-gray-500 font-medium">Total Revenue</p>
+        <h3 id="card-total-revenue" class="text-xl font-bold text-gray-900 mt-1">$0</h3>
       </div>
-      <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-        <p class="text-xs text-slate-500 font-medium">Approved Revenue</p>
+      <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <p class="text-xs text-gray-500 font-medium">Approved Revenue</p>
         <h3 id="card-approved-revenue" class="text-xl font-bold text-emerald-600 mt-1">$0</h3>
       </div>
-      <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-        <p class="text-xs text-slate-500 font-medium">Test IDs Revenue</p>
+      <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <p class="text-xs text-gray-500 font-medium">Test IDs Revenue</p>
         <h3 id="card-test-revenue" class="text-xl font-bold text-amber-500 mt-1">$0</h3>
       </div>
-      <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-        <p class="text-xs text-slate-500 font-medium">Removal Revenue</p>
+      <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <p class="text-xs text-gray-500 font-medium">Removal Revenue</p>
         <h3 id="card-removal-revenue" class="text-xl font-bold text-rose-500 mt-1">$0</h3>
       </div>
-      <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-        <p class="text-xs text-slate-500 font-medium">Total Records</p>
-        <h3 id="card-total-records" class="text-xl font-bold text-slate-900 mt-1">0</h3>
+      <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <p class="text-xs text-gray-500 font-medium">Total Records</p>
+        <h3 id="card-total-records" class="text-xl font-bold text-gray-900 mt-1">0</h3>
       </div>
-      <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-        <p class="text-xs text-slate-500 font-medium">Active Clients</p>
-        <h3 id="card-active-clients" class="text-xl font-bold text-slate-900 mt-1">0</h3>
+      <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <p class="text-xs text-gray-500 font-medium">Active Clients</p>
+        <h3 id="card-active-clients" class="text-xl font-bold text-gray-900 mt-1">0</h3>
       </div>
     </section>
 
-    <!-- Charts: Row 1 -->
+    <!-- Charts Row 1 -->
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
-        <h2 class="text-base font-semibold text-slate-800">Disposition Date wise</h2>
-        <p class="text-xs text-slate-400 mb-4">Total completions over time</p>
-        <div class="chart-container">
+      <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+        <h2 class="text-base font-semibold text-gray-800">Disposition Date-wise</h2>
+        <p class="text-xs text-gray-400 mb-4">Volume over time</p>
+        <div class="chart-box">
           <canvas id="dispositionDateChart"></canvas>
         </div>
       </div>
-      <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
-        <h2 class="text-base font-semibold text-slate-800">Disposition Month wise</h2>
-        <p class="text-xs text-slate-400 mb-4">Revenue by disposition month</p>
-        <div class="chart-container">
+      <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+        <h2 class="text-base font-semibold text-gray-800">Disposition Month-wise</h2>
+        <p class="text-xs text-gray-400 mb-4">Revenue by disposition month</p>
+        <div class="chart-box">
           <canvas id="dispositionMonthChart"></canvas>
         </div>
       </div>
     </section>
 
-    <!-- Charts: Row 2 -->
+    <!-- Charts Row 2 -->
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
-        <h2 class="text-base font-semibold text-slate-800">QA wise</h2>
-        <p class="text-xs text-slate-400 mb-4">Top 10 Auditors by verified records</p>
-        <div class="chart-container">
+      <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+        <h2 class="text-base font-semibold text-gray-800">Top 10 QA Auditors</h2>
+        <p class="text-xs text-gray-400 mb-4">Audited volume by team member</p>
+        <div class="chart-box">
           <canvas id="qaChart"></canvas>
         </div>
       </div>
-      <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
-        <h2 class="text-base font-semibold text-slate-800">Client wise</h2>
-        <p class="text-xs text-slate-400 mb-4">Top clients by revenue</p>
-        <div class="chart-container">
+      <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+        <h2 class="text-base font-semibold text-gray-800">Top 10 Clients</h2>
+        <p class="text-xs text-gray-400 mb-4">Revenue breakdown by client</p>
+        <div class="chart-box">
           <canvas id="clientChart"></canvas>
         </div>
       </div>
     </section>
 
-    <!-- Table Section -->
-    <section class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+    <!-- Data Table -->
+    <section class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
       <div class="flex justify-between items-center mb-4">
         <div>
-          <h2 class="text-base font-semibold text-slate-800">Drill-down table</h2>
-          <p class="text-xs text-slate-400">Displaying first 100 filtered records</p>
+          <h2 class="text-base font-semibold text-gray-800">Drill-Down Table</h2>
+          <p class="text-xs text-gray-400">Showing first 100 rows matching filter criteria</p>
         </div>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
-            <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
+            <tr class="bg-gray-100 text-gray-600 border-b border-gray-200">
               <th class="py-3 px-3">Disposition Date</th>
               <th class="py-3 px-3">Disposition Month</th>
               <th class="py-3 px-3">Billed Month</th>
               <th class="py-3 px-3">Client</th>
               <th class="py-3 px-3">Research Associate</th>
               <th class="py-3 px-3">QA</th>
-              <th class="py-3 px-3">Client Status</th>
-              <th class="py-3 px-3">Revenue ($)</th>
+              <th class="py-3 px-3">Status</th>
+              <th class="py-3 px-3">CPI ($)</th>
               <th class="py-3 px-3">Project Name</th>
             </tr>
           </thead>
-          <tbody id="table-body" class="divide-y divide-slate-100">
+          <tbody id="table-body" class="divide-y divide-gray-100">
             <tr>
-              <td colspan="9" class="py-6 text-center text-slate-400">Please upload your "CATI Dashboard V2.xlsx" to view data.</td>
+              <td colspan="9" class="py-6 text-center text-gray-400">Please upload your spreadsheet above to view data.</td>
             </tr>
           </tbody>
         </table>
@@ -202,108 +202,6 @@
         
         rawDataset = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-        document.getElementById('last-refresh').innerText = `Updated: ${new Date().toLocaleTimeString()}`;
+        document.getElementById('last-refresh').innerText = `File: ${file.name} (Updated ${new Date().toLocaleTimeString()})`;
         setupFilters(rawDataset);
-        updateDashboard();
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    function setupFilters(data) {
-      const billedMonths = new Set();
-      const clients = new Set();
-      const qas = new Set();
-
-      data.forEach(row => {
-        if (row['Billed Month']) billedMonths.add(row['Billed Month']);
-        if (row['Client']) clients.add(row['Client']);
-        if (row['QA']) qas.add(row['QA']);
-      });
-
-      populateDropdown('filter-billed-month', Array.from(billedMonths).sort());
-      populateDropdown('filter-client', Array.from(clients).sort());
-      populateDropdown('filter-qa', Array.from(qas).sort());
-
-      ['filter-billed-month', 'filter-client', 'filter-qa', 'filter-status'].forEach(id => {
-        document.getElementById(id).addEventListener('change', updateDashboard);
-      });
-    }
-
-    function populateDropdown(elementId, items) {
-      const select = document.getElementById(elementId);
-      select.innerHTML = '<option value="All">All</option>';
-      items.forEach(item => {
-        const opt = document.createElement('option');
-        opt.value = item;
-        opt.innerText = item;
-        select.appendChild(opt);
-      });
-    }
-
-    function updateDashboard() {
-      const selectedBilledMonth = document.getElementById('filter-billed-month').value;
-      const selectedClient = document.getElementById('filter-client').value;
-      const selectedQA = document.getElementById('filter-qa').value;
-      const selectedStatus = document.getElementById('filter-status').value;
-
-      const filtered = rawDataset.filter(row => {
-        const matchBilled = selectedBilledMonth === 'All' || row['Billed Month'] === selectedBilledMonth;
-        const matchClient = selectedClient === 'All' || row['Client'] === selectedClient;
-        const matchQA = selectedQA === 'All' || row['QA'] === selectedQA;
-        const matchStatus = selectedStatus === 'All' || String(row['Client Status']).toLowerCase() === selectedStatus.toLowerCase();
-        return matchBilled && matchClient && matchQA && matchStatus;
-      });
-
-      renderKPIs(filtered);
-      renderCharts(filtered);
-      renderTable(filtered);
-    }
-
-    function renderKPIs(data) {
-      let totalRevenue = 0;
-      let approvedRevenue = 0;
-      let testRevenue = 0;
-      let removalRevenue = 0;
-      const clients = new Set();
-
-      data.forEach(row => {
-        const cpi = parseFloat(row['CPI']) || 0;
-        const status = String(row['Client Status'] || '').trim().toLowerCase();
-        
-        totalRevenue += cpi;
-        if (status === 'approved') approvedRevenue += cpi;
-        if (status === 'removal') removalRevenue += cpi;
-        if (status.includes('test')) testRevenue += cpi;
-
-        if (row['Client']) clients.add(row['Client']);
-      });
-
-      document.getElementById('card-total-revenue').innerText = `$${totalRevenue.toLocaleString()}`;
-      document.getElementById('card-approved-revenue').innerText = `$${approvedRevenue.toLocaleString()}`;
-      document.getElementById('card-test-revenue').innerText = `$${testRevenue.toLocaleString()}`;
-      document.getElementById('card-removal-revenue').innerText = `$${removalRevenue.toLocaleString()}`;
-      document.getElementById('card-total-records').innerText = data.length.toLocaleString();
-      document.getElementById('card-active-clients').innerText = clients.size;
-    }
-
-    function renderCharts(data) {
-      // Aggregate data
-      const dateMap = {};
-      const dispMonthMap = {};
-      const qaMap = {};
-      const clientMap = {};
-
-      data.forEach(row => {
-        const cpi = parseFloat(row['CPI']) || 0;
-        const dDate = row['Disposition Date'] ? String(row['Disposition Date']).slice(0, 10) : 'Unknown';
-        const dMonth = row['Disposition Month'] || 'Unknown';
-        const qa = row['QA'] || 'Unassigned';
-        const client = row['Client'] || 'Unknown';
-
-        dateMap[dDate] = (dateMap[dDate] || 0) + 1;
-        dispMonthMap[dMonth] = (dispMonthMap[dMonth] || 0) + cpi;
-        qaMap[qa] = (qaMap[qa] || 0) + 1;
-        clientMap[client] = (clientMap[client] || 0) + cpi;
-      });
-
-      createChart
+        update
