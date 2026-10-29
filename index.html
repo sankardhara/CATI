@@ -1,92 +1,309 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>CATI Revenue & Operations Dashboard</title>
-<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
-<style>
-:root{--bg:#f4efe7;--card:#ffffff;--ink:#1f2937;--muted:#6b7280;--line:#e3d9cb;--accent:#7c3aed;--accent2:#0f766e;--shadow:0 14px 32px rgba(15,23,42,.10)}
-*{box-sizing:border-box} body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at top left, rgba(124,58,237,.08), transparent 30%), radial-gradient(circle at top right, rgba(15,118,110,.08), transparent 28%);pointer-events:none}
-.wrap{max-width:1520px;margin:0 auto;padding:20px;position:relative;z-index:1}
-.header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;background:linear-gradient(135deg,#ffffff 0%, #fbf7ef 55%, #f3ede2 100%);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
-.h-title{font-size:30px;font-weight:800;margin:0 0 6px;letter-spacing:-0.02em}.h-sub{color:var(--muted);margin:0;font-size:14px}
-.h-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.badge,.btn,.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;font-size:13px}
-.btn{background:linear-gradient(135deg,var(--accent),#5b21b6);color:#fff;border:none;cursor:pointer;box-shadow:0 8px 18px rgba(124,58,237,.25)}
-.filters{position:sticky;top:0;z-index:10;margin-top:14px;background:rgba(250,246,239,.90);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:16px;padding:12px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;box-shadow:var(--shadow)}
-.filter{display:flex;flex-direction:column;gap:6px}.filter label{font-size:12px;color:var(--muted)}
-.filter select,.filter input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
-.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{cursor:pointer}.chip.active{background:linear-gradient(135deg,var(--accent2),#0b5e57);color:#fff;border-color:var(--accent2)}
-.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-top:14px}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}.kpi .t{font-size:12px;color:var(--muted);margin-bottom:8px}.kpi .v{font-size:24px;font-weight:800;color:#111827}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow);min-height:360px;position:relative;overflow:hidden}
-.panel h2{margin:0 0 8px;font-size:18px;letter-spacing:-0.01em}.panel p{margin:0 0 12px;color:var(--muted);font-size:13px}
-.chart{border:1px solid #eee;border-radius:14px;min-height:300px;background:linear-gradient(180deg,#ffffff,#fbf8f3)}
-.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
-table{width:100%;border-collapse:collapse;background:#fff;min-width:1200px}th,td{padding:12px 10px;border-bottom:1px solid #eee;text-align:left;font-size:13px;white-space:nowrap}th{position:sticky;top:0;background:#faf7f2;color:#374151;font-weight:700}
-.footer{margin:14px 0 8px;color:var(--muted);font-size:12px;text-align:center}
-@media (max-width:1200px){.filters{grid-template-columns:repeat(3,minmax(0,1fr))}.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.grid2{grid-template-columns:1fr}}
-@media (max-width:720px){.filters,.kpis{grid-template-columns:1fr}.header{flex-direction:column}.h-meta{justify-content:flex-start}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CATI Revenue &amp; Operations Dashboard</title>
+
+  <!-- Tailwind CSS CDN for styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS for client-side Excel parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    .chart-container {
+      position: relative;
+      height: 300px;
+      width: 100%;
+    }
+  </style>
 </head>
-<body>
-<div class="wrap">
-  <header class="header">
-    <div>
-      <h1 class="h-title">CATI Revenue & Operations Dashboard</h1>
-      <p class="h-sub">Disposition, billed, client, Research Associate, QA, and project breakdowns</p>
+<body class="bg-slate-50 text-slate-800 font-sans p-4 md:p-8">
+
+  <div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-slate-900">CATI Revenue &amp; Operations Dashboard</h1>
+        <p class="text-sm text-slate-500">Disposition, billed, client, Research Associate, QA, and project breakdowns</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="last-refresh" class="text-xs text-slate-500 bg-slate-200 px-3 py-1.5 rounded-full font-medium">Last refresh: None</span>
+      </div>
+    </header>
+
+    <!-- Upload Box (Drag and Drop) -->
+    <div id="drop-zone" class="border-2 border-dashed border-indigo-300 bg-white hover:bg-indigo-50/50 rounded-xl p-6 text-center cursor-pointer transition shadow-sm">
+      <input type="file" id="file-input" accept=".xlsx, .xls" class="hidden" />
+      <div class="space-y-1">
+        <p class="text-sm md:text-base font-semibold text-indigo-700">
+          📁 Click to upload or drag &amp; drop <span class="underline">CATI Dashboard V2.xlsx</span>
+        </p>
+        <p class="text-xs text-slate-400">Processed locally in your browser. No data leaves your machine.</p>
+      </div>
     </div>
-    <div class="h-meta">
-      <span class="badge" id="refreshBadge">Last refresh: --</span>
-      <button class="btn" id="refreshBtn">Refresh</button>
-    </div>
-  </header>
-  <section class="filters">
-    <div class="filter"><label>Date range</label><input type="date" id="dateFrom"><input type="date" id="dateTo" style="margin-top:6px"></div>
-    <div class="filter"><label>Disposition Month</label><select id="dispMonth"><option value="All">All</option></select></div>
-    <div class="filter"><label>Billed Month</label><select id="billedMonth"><option value="All">All</option></select></div>
-    <div class="filter"><label>Client Status</label><div class="chips"><button class="chip active" data-status="Approved">Approved</button><button class="chip" data-status="Test IDs">Test IDs</button><button class="chip" data-status="Removal">Removal</button><button class="chip" data-status="All">All</button></div></div>
-    <div class="filter"><label>Client</label><select id="client"><option value="All">All</option></select></div>
-    <div class="filter"><label>Research Associate</label><select id="ra"><option value="All">All</option></select></div>
-    <div class="filter"><label>QA</label><select id="qa"><option value="All">All</option></select></div>
-  </section>
-  <section class="kpis">
-    <div class="kpi"><div class="t">Total Revenue</div><div class="v" id="kpiRevenue">--</div></div>
-    <div class="kpi"><div class="t">Approved Revenue</div><div class="v" id="kpiApproved">--</div></div>
-    <div class="kpi"><div class="t">Test IDs Revenue</div><div class="v" id="kpiTest">--</div></div>
-    <div class="kpi"><div class="t">Removal Revenue</div><div class="v" id="kpiRemoval">--</div></div>
-    <div class="kpi"><div class="t">Total Records</div><div class="v" id="kpiRows">--</div></div>
-    <div class="kpi"><div class="t">Active Clients</div><div class="v" id="kpiClients">--</div></div>
-  </section>
-  <section class="grid2"><div class="panel"><h2>Disposition Date wise</h2><p>Revenue by date with status split</p><div class="chart" id="chartDate"></div></div><div class="panel"><h2>Disposition Month wise</h2><p>Revenue by disposition month</p><div class="chart" id="chartDispMonth"></div></div></section>
-  <section class="grid2"><div class="panel"><h2>Billed Month wise</h2><p>Revenue by billed month</p><div class="chart" id="chartBilledMonth"></div></div><div class="panel"><h2>Research Associate wise</h2><p>Revenue by research associate</p><div class="chart" id="chartRA"></div></div></section>
-  <section class="grid2"><div class="panel"><h2>QA wise</h2><p>Revenue by QA</p><div class="chart" id="chartQA"></div></div><div class="panel"><h2>Client wise</h2><p>Revenue by client</p><div class="chart" id="chartClient"></div></div></section>
-  <section class="panel" style="margin-top:14px;"><h2>Drill-down table</h2><p>Filtered records with revenue, status, and ownership details</p><div class="table-wrap"><table><thead><tr><th>Disposition Date</th><th>Disposition Month</th><th>Billed Month</th><th>Client</th><th>Research Associate</th><th>QA</th><th>Client Status</th><th>Revenue</th><th>Project Name</th></tr></thead><tbody id="tableBody"><tr><td colspan="9">Loading...</td></tr></tbody></table></div></section>
-  <div class="footer">HTML dashboard ready for Vercel deployment.</div>
-</div>
-<script>
-let raw=[]; let state={status:'Approved'};
-const fmt=n=>new Intl.NumberFormat('en-IN',{maximumFractionDigits:0}).format(n||0);
-const uniq=a=>[...new Set(a.filter(v=>v!==null && v!==undefined && v!==''))].sort((x,y)=>String(x).localeCompare(String(y)));
-const sum=(arr,k)=>arr.reduce((s,d)=>s+(+d[k]||0),0);
-function group(arr,key){const m=new Map(); arr.forEach(d=>{const k=d[key]||'Unknown'; m.set(k,(m.get(k)||0)+(+d.Revenue||0));}); return [...m.entries()].sort((a,b)=>b[1]-a[1]);}
-function groupDate(arr,key){const m=new Map(); arr.forEach(d=>{const k=d[key]||'Unknown'; m.set(k,(m.get(k)||0)+(+d.Revenue||0));}); return [...m.entries()].sort((a,b)=>new Date(a[0]) - new Date(b[0]));}
-function renderPlot(id,x,y,type='bar',color='#7c3aed'){Plotly.newPlot(id,[{x,y,type,marker:{color}}],{margin:{l:50,r:20,t:10,b:50},paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'#fff',xaxis:{title:''},yaxis:{title:'Revenue'},height:300,showlegend:false}, {displayModeBar:false, responsive:true});}
-function renderHorizontal(id,data,color){Plotly.newPlot(id,[{x:data.map(d=>d[1]), y:data.map(d=>d[0]), type:'bar', orientation:'h', marker:{color}}],{margin:{l:160,r:20,t:10,b:40},paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'#fff',height:300,showlegend:false}, {displayModeBar:false, responsive:true});}
-function applyFilters(){let d=raw.slice(); if(state.status!=='All') d=d.filter(r=>r['Client_Status_Bucket']===state.status); if(dateFrom.value) d=d.filter(r=>r['Disposition_Date']>=dateFrom.value); if(dateTo.value) d=d.filter(r=>r['Disposition_Date']<=dateTo.value); if(dispMonth.value!=='All') d=d.filter(r=>r['Disposition_Month']===dispMonth.value); if(billedMonth.value!=='All') d=d.filter(r=>r['Billed_Month']===billedMonth.value); if(client.value!=='All') d=d.filter(r=>r['Client']===client.value); if(ra.value!=='All') d=d.filter(r=>r['Research_Associate']===ra.value); if(qa.value!=='All') d=d.filter(r=>r['QA']===qa.value); return d;}
-function update(){const d=applyFilters(); kpiRevenue.textContent='₹ '+fmt(sum(d,'Revenue')); kpiApproved.textContent='₹ '+fmt(sum(d.filter(x=>x['Client_Status_Bucket']==='Approved'),'Revenue')); kpiTest.textContent='₹ '+fmt(sum(d.filter(x=>x['Client_Status_Bucket']==='Test IDs'),'Revenue')); kpiRemoval.textContent='₹ '+fmt(sum(d.filter(x=>x['Client_Status_Bucket']==='Removal'),'Revenue')); kpiRows.textContent=fmt(d.length); kpiClients.textContent=fmt(uniq(d.map(x=>x.Client)).length);
- const dd=groupDate(d,'Disposition_Date'); renderPlot('chartDate', dd.map(x=>x[0]), dd.map(x=>x[1]), 'scatter', '#7c3aed');
- const dm=group(d,'Disposition_Month'); renderPlot('chartDispMonth', dm.map(x=>x[0]), dm.map(x=>x[1]), 'bar', '#2563eb');
- const bm=group(d,'Billed_Month'); renderPlot('chartBilledMonth', bm.map(x=>x[0]), bm.map(x=>x[1]), 'bar', '#0f766e');
- renderHorizontal('chartRA', group(d,'Research_Associate').slice(0,15), '#7c3aed');
- renderHorizontal('chartQA', group(d,'QA').slice(0,15), '#0f766e');
- renderHorizontal('chartClient', group(d,'Client').slice(0,15), '#2563eb');
- tableBody.innerHTML=d.slice(0,200).map(r=>`<tr><td>${r['Disposition_Date']||''}</td><td>${r['Disposition_Month']||''}</td><td>${r['Billed_Month']||''}</td><td>${r['Client']||''}</td><td>${r['Research_Associate']||''}</td><td>${r['QA']||''}</td><td>${r['Client Status']||''}</td><td>₹ ${fmt(r['Revenue'])}</td><td>${r['Project_Name_Email_Subject']||''}</td></tr>`).join('') || '<tr><td colspan="9">No records</td></tr>'; refreshBadge.textContent='Last refresh: '+new Date().toLocaleString(); }
-function fillSelect(sel, vals){vals.forEach(v=>{const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o);});}
-fetch('cati_dashboard_data.json',{cache:'no-store'}).then(r=>r.json()).then(data=>{raw=data; fillSelect(dispMonth, uniq(raw.map(r=>r['Disposition_Month']))); fillSelect(billedMonth, uniq(raw.map(r=>r['Billed_Month']))); fillSelect(client, uniq(raw.map(r=>r['Client']))); fillSelect(ra, uniq(raw.map(r=>r['Research_Associate']))); fillSelect(qa, uniq(raw.map(r=>r['QA']))); update();}).catch(()=>{document.querySelectorAll('.chart').forEach(el=>el.innerHTML='<div style="padding:20px;color:#6b7280">Place <b>cati_dashboard_data.json</b> next to this file to load charts.</div>'); tableBody.innerHTML='<tr><td colspan="9">Data file not found</td></tr>';});
-[dateFrom, dateTo, dispMonth, billedMonth, client, ra, qa].forEach(el=>el.addEventListener('change', update)); document.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>{document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); ch.classList.add('active'); state.status=ch.dataset.status; update();})); refreshBtn.addEventListener('click', ()=>location.reload());
-</script>
-</body>
-</html>
+
+    <!-- Filters -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Billed Month</label>
+        <select id="filter-billed-month" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          <option value="All">All Months</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Client</label>
+        <select id="filter-client" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          <option value="All">All Clients</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">QA Auditor</label>
+        <select id="filter-qa" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          <option value="All">All QA Members</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Client Status</label>
+        <select id="filter-status" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          <option value="All">All Statuses</option>
+          <option value="Approved">Approved</option>
+          <option value="Removal">Removal</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Scorecards (KPIs) -->
+    <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+        <p class="text-xs text-slate-500 font-medium">Total Revenue</p>
+        <h3 id="card-total-revenue" class="text-xl font-bold text-slate-900 mt-1">$0</h3>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+        <p class="text-xs text-slate-500 font-medium">Approved Revenue</p>
+        <h3 id="card-approved-revenue" class="text-xl font-bold text-emerald-600 mt-1">$0</h3>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+        <p class="text-xs text-slate-500 font-medium">Test IDs Revenue</p>
+        <h3 id="card-test-revenue" class="text-xl font-bold text-amber-500 mt-1">$0</h3>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+        <p class="text-xs text-slate-500 font-medium">Removal Revenue</p>
+        <h3 id="card-removal-revenue" class="text-xl font-bold text-rose-500 mt-1">$0</h3>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+        <p class="text-xs text-slate-500 font-medium">Total Records</p>
+        <h3 id="card-total-records" class="text-xl font-bold text-slate-900 mt-1">0</h3>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+        <p class="text-xs text-slate-500 font-medium">Active Clients</p>
+        <h3 id="card-active-clients" class="text-xl font-bold text-slate-900 mt-1">0</h3>
+      </div>
+    </section>
+
+    <!-- Charts: Row 1 -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+        <h2 class="text-base font-semibold text-slate-800">Disposition Date wise</h2>
+        <p class="text-xs text-slate-400 mb-4">Total completions over time</p>
+        <div class="chart-container">
+          <canvas id="dispositionDateChart"></canvas>
+        </div>
+      </div>
+      <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+        <h2 class="text-base font-semibold text-slate-800">Disposition Month wise</h2>
+        <p class="text-xs text-slate-400 mb-4">Revenue by disposition month</p>
+        <div class="chart-container">
+          <canvas id="dispositionMonthChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Charts: Row 2 -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+        <h2 class="text-base font-semibold text-slate-800">QA wise</h2>
+        <p class="text-xs text-slate-400 mb-4">Top 10 Auditors by verified records</p>
+        <div class="chart-container">
+          <canvas id="qaChart"></canvas>
+        </div>
+      </div>
+      <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+        <h2 class="text-base font-semibold text-slate-800">Client wise</h2>
+        <p class="text-xs text-slate-400 mb-4">Top clients by revenue</p>
+        <div class="chart-container">
+          <canvas id="clientChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Table Section -->
+    <section class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h2 class="text-base font-semibold text-slate-800">Drill-down table</h2>
+          <p class="text-xs text-slate-400">Displaying first 100 filtered records</p>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
+              <th class="py-3 px-3">Disposition Date</th>
+              <th class="py-3 px-3">Disposition Month</th>
+              <th class="py-3 px-3">Billed Month</th>
+              <th class="py-3 px-3">Client</th>
+              <th class="py-3 px-3">Research Associate</th>
+              <th class="py-3 px-3">QA</th>
+              <th class="py-3 px-3">Client Status</th>
+              <th class="py-3 px-3">Revenue ($)</th>
+              <th class="py-3 px-3">Project Name</th>
+            </tr>
+          </thead>
+          <tbody id="table-body" class="divide-y divide-slate-100">
+            <tr>
+              <td colspan="9" class="py-6 text-center text-slate-400">Please upload your "CATI Dashboard V2.xlsx" to view data.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    let rawDataset = [];
+    let charts = {};
+
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('bg-indigo-50'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('bg-indigo-50'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('bg-indigo-50');
+      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames.includes("Raw Data") ? "Raw Data" : workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        
+        rawDataset = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+        document.getElementById('last-refresh').innerText = `Updated: ${new Date().toLocaleTimeString()}`;
+        setupFilters(rawDataset);
+        updateDashboard();
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function setupFilters(data) {
+      const billedMonths = new Set();
+      const clients = new Set();
+      const qas = new Set();
+
+      data.forEach(row => {
+        if (row['Billed Month']) billedMonths.add(row['Billed Month']);
+        if (row['Client']) clients.add(row['Client']);
+        if (row['QA']) qas.add(row['QA']);
+      });
+
+      populateDropdown('filter-billed-month', Array.from(billedMonths).sort());
+      populateDropdown('filter-client', Array.from(clients).sort());
+      populateDropdown('filter-qa', Array.from(qas).sort());
+
+      ['filter-billed-month', 'filter-client', 'filter-qa', 'filter-status'].forEach(id => {
+        document.getElementById(id).addEventListener('change', updateDashboard);
+      });
+    }
+
+    function populateDropdown(elementId, items) {
+      const select = document.getElementById(elementId);
+      select.innerHTML = '<option value="All">All</option>';
+      items.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item;
+        opt.innerText = item;
+        select.appendChild(opt);
+      });
+    }
+
+    function updateDashboard() {
+      const selectedBilledMonth = document.getElementById('filter-billed-month').value;
+      const selectedClient = document.getElementById('filter-client').value;
+      const selectedQA = document.getElementById('filter-qa').value;
+      const selectedStatus = document.getElementById('filter-status').value;
+
+      const filtered = rawDataset.filter(row => {
+        const matchBilled = selectedBilledMonth === 'All' || row['Billed Month'] === selectedBilledMonth;
+        const matchClient = selectedClient === 'All' || row['Client'] === selectedClient;
+        const matchQA = selectedQA === 'All' || row['QA'] === selectedQA;
+        const matchStatus = selectedStatus === 'All' || String(row['Client Status']).toLowerCase() === selectedStatus.toLowerCase();
+        return matchBilled && matchClient && matchQA && matchStatus;
+      });
+
+      renderKPIs(filtered);
+      renderCharts(filtered);
+      renderTable(filtered);
+    }
+
+    function renderKPIs(data) {
+      let totalRevenue = 0;
+      let approvedRevenue = 0;
+      let testRevenue = 0;
+      let removalRevenue = 0;
+      const clients = new Set();
+
+      data.forEach(row => {
+        const cpi = parseFloat(row['CPI']) || 0;
+        const status = String(row['Client Status'] || '').trim().toLowerCase();
+        
+        totalRevenue += cpi;
+        if (status === 'approved') approvedRevenue += cpi;
+        if (status === 'removal') removalRevenue += cpi;
+        if (status.includes('test')) testRevenue += cpi;
+
+        if (row['Client']) clients.add(row['Client']);
+      });
+
+      document.getElementById('card-total-revenue').innerText = `$${totalRevenue.toLocaleString()}`;
+      document.getElementById('card-approved-revenue').innerText = `$${approvedRevenue.toLocaleString()}`;
+      document.getElementById('card-test-revenue').innerText = `$${testRevenue.toLocaleString()}`;
+      document.getElementById('card-removal-revenue').innerText = `$${removalRevenue.toLocaleString()}`;
+      document.getElementById('card-total-records').innerText = data.length.toLocaleString();
+      document.getElementById('card-active-clients').innerText = clients.size;
+    }
+
+    function renderCharts(data) {
+      // Aggregate data
+      const dateMap = {};
+      const dispMonthMap = {};
+      const qaMap = {};
+      const clientMap = {};
+
+      data.forEach(row => {
+        const cpi = parseFloat(row['CPI']) || 0;
+        const dDate = row['Disposition Date'] ? String(row['Disposition Date']).slice(0, 10) : 'Unknown';
+        const dMonth = row['Disposition Month'] || 'Unknown';
+        const qa = row['QA'] || 'Unassigned';
+        const client = row['Client'] || 'Unknown';
+
+        dateMap[dDate] = (dateMap[dDate] || 0) + 1;
+        dispMonthMap[dMonth] = (dispMonthMap[dMonth] || 0) + cpi;
+        qaMap[qa] = (qaMap[qa] || 0) + 1;
+        clientMap[client] = (clientMap[client] || 0) + cpi;
+      });
+
+      createChart
